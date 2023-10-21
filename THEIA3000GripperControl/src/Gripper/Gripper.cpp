@@ -65,7 +65,7 @@ void Gripper::write_eeprom()
 
 void Gripper::control()
 {
-    bool control = !(digitalRead(_controlPin)&&digitalRead(_controlPin)&&digitalRead(_controlPin)&&digitalRead(_controlPin));
+    bool control = (digitalRead(_controlPin)&&digitalRead(_controlPin)&&digitalRead(_controlPin)&&digitalRead(_controlPin));
     if(control)
     {
         if(!_isActive)
