@@ -25,7 +25,7 @@ void setup()
   delay(10);
   Serial.println("***********  THEIA3000 MagKicker Pusher  **********");
   Serial.println("*  ScanTime      : ~3000us                        *");
-  Serial.println("*  ComPort       : No Need                        *");
+  Serial.println("*  ComPort       : COM14                          *");
   Serial.println("***************************************************");
 }
 
