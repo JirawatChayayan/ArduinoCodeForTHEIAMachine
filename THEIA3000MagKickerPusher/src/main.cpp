@@ -27,6 +27,8 @@ void setup()
   Serial.println("*  ScanTime      : ~3000us                        *");
   Serial.println("*  ComPort       : COM14                          *");
   Serial.println("***************************************************");
+  magkick_L.ns = "l";
+  magkick_R.ns = "r";
 }
 
 void calculate_scantime()
@@ -51,15 +53,83 @@ void calculate_scantime()
   }
 }
 
+String inputStr;
+String cmd_input;
+String cmd_name = "";
+String cmd_value = "";
+
+void separate_cmd(String cmd,String seprator)
+{
+  cmd_name = "";
+  cmd_value = "";
+  int cmd_index = cmd.indexOf(seprator);
+  if(cmd_index != -1)
+  {
+    cmd_name = cmd.substring(0,cmd_index);
+    cmd_value = cmd.substring(cmd_index+1);
+  }
+  else
+  {
+    cmd_name = cmd;
+    cmd_value = "";
+  }
+}
+
+void serialHandle()
+{
+  separate_cmd(cmd_input,"=");
+  if(cmd_name == "e_l")
+  {
+    ejector.set_length(cmd_value);
+  }
+  else if(cmd_name == "e_c")
+  {
+    ejector.set_control(cmd_value == "1");
+  }
+  else if(cmd_name == "m_l")
+  {
+    magkick_L.set_control(cmd_value == "1");
+  }
+  else if(cmd_name == "m_r")
+  {
+    magkick_R.set_control(cmd_value == "1");
+  }
+}
+
+void serialEvent()
+{
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if(inChar == '\r' || inChar == '\n')
+    {
+
+    }
+    else if(inChar == ';')
+    {
+      cmd_input = inputStr;
+      inputStr = "";
+      serialHandle();
+    }
+    else
+    {
+      inputStr += inChar;
+    }
+  }
+}
+
 void loop()
 {
-  scanStartTime = micros();  // Record the start time of the loop iteration
+  //scanStartTime = micros();  // Record the start time of the loop iteration
   
   ejector.control();
   magkick_L.control();
   magkick_R.control();
   
-  calculate_scantime();
+  //calculate_scantime();
+
+  
+
+
   wdt_reset();
 }
 

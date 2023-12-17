@@ -102,12 +102,27 @@ void Ejector::sensor_interrupt()
     //Serial.println(count_isr);
 }
 
+uint8_t Ejector::CheckLength()
+{
+    if(serial_control)
+    {
+        _ejecterLength = serial_length;
+    }
+    else
+    {
+        _ejecterLength = ReadLengthEjector();
+    }
+    return _ejecterLength;
+}
+
 void Ejector::control()
 {
     Enable(true);
-    if(Handle())
+    if(Handle() || serial_control)
     {
-        _ejecterLength = ReadLengthEjector(); 
+        _ejecterLength = CheckLength(); 
+        serial_finish = false;
+        serial_on_moving = true;
         switch (state_machine)
         {
             case EjectorStateMachine::CheckIsHoming:
@@ -142,6 +157,9 @@ void Ejector::control()
             case EjectorStateMachine::GoBackToHome:
                 if(IsHomming())
                 {
+                    serial_control = false;
+                    serial_finish = true;
+                    serial_on_moving = false;
                     Ejector_Status_out(true);
                     Break_Ejector();
                 }
@@ -156,6 +174,7 @@ void Ejector::control()
     }
     else
     {
+        serial_on_moving = false;
         Ejector_Status_out(false);
         state_machine = EjectorStateMachine::CheckIsHoming;
         if(IsHomming())
@@ -167,4 +186,42 @@ void Ejector::control()
             REV_Ejector();
         }
     }
+    update();
+}
+void Ejector::set_length(String length)
+{
+    uint8_t len = 3;
+    if(length == "4")
+    {
+        len = 4;
+    }
+    else if(length == "3")
+    {
+        len = 3;
+    }
+    else if(length == "2")
+    {
+        len = 2;
+    }
+    else if(length == "1")
+    {
+        len = 1;
+    }
+    serial_length = len;
+    
+}
+void Ejector::set_control(bool control)
+{
+    serial_control = control;
+}
+
+void Ejector::update()
+{
+    unsigned long T_now = millis();
+    if(T_now - T_update > 100)
+    {
+        T_update = T_now;
+        Serial.println("e_s,"+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_length));
+    }
+
 }

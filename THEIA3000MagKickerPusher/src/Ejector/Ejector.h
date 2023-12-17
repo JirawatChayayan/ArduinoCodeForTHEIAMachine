@@ -18,6 +18,10 @@ private:
     };
     uint8_t _ejecterLength = 0; 
     uint8_t CountLen = 0;
+
+
+
+
     EjectorStateMachine state_machine = EjectorStateMachine::CheckIsHoming;
     // Private member functions
     bool Handle();
@@ -30,11 +34,21 @@ private:
     void REV_Ejector();
     void Break_Ejector();
     void Ejector_Status_out(bool statusIO);
+    uint8_t CheckLength();
+    unsigned long T_update = millis();
+    bool serial_control = false;
+    uint8_t serial_length = 3;
+    bool serial_finish = false;
+    bool serial_on_moving = false;
 
 public:
+
     static void sensor_interrupt();
     Ejector(EjectorPin pin);
     void control();
+    void set_length(String length);
+    void set_control(bool control);
+    void update();
 };
 
 #endif  // EJECTOR_H

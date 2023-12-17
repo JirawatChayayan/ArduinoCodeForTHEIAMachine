@@ -74,6 +74,7 @@ bool MagKicker::readPlatform()
 {
     bool SensorPF = !(digitalRead(_pin_mag.ip_Sen_PF) && digitalRead(_pin_mag.ip_Sen_PF) && digitalRead(_pin_mag.ip_Sen_PF));
     digitalWrite(_pin_mag.op_PF_FULL,SensorPF);
+    serial_platform = SensorPF;
     return SensorPF;
 }
 
@@ -198,6 +199,8 @@ void MagKicker::handleProcess()
         }
         else
         {
+            serial_finish = false;
+            serial_on_moving = true;
             bool home_sens = readSensHome();
             bool limit_sens = readSensLimit();
             //Serial.println("SENSOR Home :="+ String(home_sens)+" limit :="+String(limit_sens));
@@ -266,6 +269,9 @@ void MagKicker::handleProcess()
                     finishHandleprocess = true;
                     _pin_mag.set_pwm(pulseWidth);
                     statusFinishProcess(finishHandleprocess);
+                    serial_finish = true;
+                    serial_control= false;
+                    serial_on_moving = false;
                     goHome(readSensHome());
             }
         }
@@ -274,7 +280,7 @@ void MagKicker::handleProcess()
 
 void MagKicker::control()
 {
-    if(readHandle())
+    if(serial_control || readHandle())
     {
       // Serial.println("Handle");
         handleProcess();
@@ -282,6 +288,24 @@ void MagKicker::control()
     else
     {
         //Serial.println("Un Handle");
+        serial_on_moving = false;
         unHandleProcess();
     }
+    update();
+}
+
+void MagKicker::set_control(bool status)
+{
+    serial_control = status;
+}
+void MagKicker::update()
+{
+    unsigned long T_now = millis();
+    if(T_now - T_update > 100)
+    {
+        T_update = T_now;
+        String msg = "m_"+String(ns)+","+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_platform);
+        Serial.println(msg);
+    }
+
 }
