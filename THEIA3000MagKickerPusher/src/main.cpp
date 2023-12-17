@@ -136,10 +136,10 @@ void serialEvent()
 void update_status()
 {
     unsigned long T_now = millis();
-    if(T_now - T_update > 200)
+    if(T_now - T_update > 20)
     {
       T_update = T_now;
-      String msg = ejector.update()+";"+magkick_L.update()+";"+magkick_R.update()+";"+String(averageScanTime)+"ms";
+      String msg = "pw,"+String(power_state)+";"+ejector.update()+";"+magkick_L.update()+";"+magkick_R.update()+";"+String(averageScanTime)+"ms";
       Serial.println(msg);
     }
    

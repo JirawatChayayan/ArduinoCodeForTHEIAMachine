@@ -119,6 +119,7 @@ void Ejector::control()
 {
     if(stop_motion)
     {
+        Enable(false);
         Ejector_Status_out(false);
         Break_Ejector();
         serial_finish = false;

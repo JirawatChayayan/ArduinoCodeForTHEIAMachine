@@ -283,12 +283,14 @@ void MagKicker::control()
     if(stop_motion)
     {
         stopMotion();
+        _pin_mag.set_pwm(0);
         serial_control = false;
         serial_on_moving = false;
         serial_finish = false;
     }
     else
     {
+        _pin_mag.set_pwm(pulseWidth);
         if(serial_control || readHandle())
         {
             handleProcess();
