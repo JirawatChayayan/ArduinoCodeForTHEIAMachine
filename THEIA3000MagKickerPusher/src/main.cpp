@@ -21,6 +21,7 @@ float averageScanTime = 0;
 
 unsigned long T_update = millis();
 
+bool power_state = true;
 
 String inputStr;
 String cmd_input;
@@ -100,6 +101,14 @@ void serialHandle()
   {
     magkick_R.set_control(cmd_value == "1");
   }
+  else if(cmd_name == "off")
+  {
+    power_state = false;
+  }
+  else if(cmd_name == "on")
+  {
+    power_state = true;
+  }
 }
 
 void serialEvent()
@@ -136,9 +145,17 @@ void update_status()
    
 }
 
+void power_control()
+{
+    magkick_L.stop_motion = !power_state;
+    magkick_R.stop_motion = !power_state;
+    ejector.stop_motion = !power_state;
+}
+
 void loop()
 {
   scanStartTime = micros();  // Record the start time of the loop iteration
+  power_control();
   ejector.control();
   magkick_L.control();
   magkick_R.control();

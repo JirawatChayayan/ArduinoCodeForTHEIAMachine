@@ -117,75 +117,88 @@ uint8_t Ejector::CheckLength()
 
 void Ejector::control()
 {
-    Enable(true);
-    if(Handle() || serial_control)
+    if(stop_motion)
     {
-        _ejecterLength = CheckLength(); 
+        Ejector_Status_out(false);
+        Break_Ejector();
         serial_finish = false;
-        serial_on_moving = true;
-        switch (state_machine)
-        {
-            case EjectorStateMachine::CheckIsHoming:
-                count_isr = 0;
-                if(IsHomming())
-                {
-                    state_machine = EjectorStateMachine::MoveFWD;
-                }
-                else
-                {
-                    state_machine = EjectorStateMachine::MoveREV;
-                }
-                break;
-            case EjectorStateMachine::MoveREV:
-                REV_Ejector();
-                state_machine = EjectorStateMachine::CheckIsHoming;
-                break;
-            case EjectorStateMachine::MoveFWD:
-                FWD_Ejector();
-                state_machine = EjectorStateMachine::CounterHole;
-                break;
-            case EjectorStateMachine::CounterHole:
-                if(count_isr>= _ejecterLength+1)
-                {
-                    state_machine = EjectorStateMachine::GoBackToHome;
-                }
-                else
-                {
-                    state_machine = EjectorStateMachine::MoveFWD;
-                }
-                break;
-            case EjectorStateMachine::GoBackToHome:
-                if(IsHomming())
-                {
-                    serial_control = false;
-                    serial_finish = true;
-                    serial_on_moving = false;
-                    Ejector_Status_out(true);
-                    Break_Ejector();
-                }
-                else
-                {
-                    REV_Ejector();
-                }
-
-            default:
-                break;
-        }
+        serial_on_moving = false;
+        serial_control = false;
+        return;
     }
     else
     {
-        serial_on_moving = false;
-        Ejector_Status_out(false);
-        state_machine = EjectorStateMachine::CheckIsHoming;
-        if(IsHomming())
+        Enable(true);
+        if(Handle() || serial_control)
         {
-            Break_Ejector();
+            _ejecterLength = CheckLength(); 
+            serial_finish = false;
+            serial_on_moving = true;
+            switch (state_machine)
+            {
+                case EjectorStateMachine::CheckIsHoming:
+                    count_isr = 0;
+                    if(IsHomming())
+                    {
+                        state_machine = EjectorStateMachine::MoveFWD;
+                    }
+                    else
+                    {
+                        state_machine = EjectorStateMachine::MoveREV;
+                    }
+                    break;
+                case EjectorStateMachine::MoveREV:
+                    REV_Ejector();
+                    state_machine = EjectorStateMachine::CheckIsHoming;
+                    break;
+                case EjectorStateMachine::MoveFWD:
+                    FWD_Ejector();
+                    state_machine = EjectorStateMachine::CounterHole;
+                    break;
+                case EjectorStateMachine::CounterHole:
+                    if(count_isr>= _ejecterLength+1)
+                    {
+                        state_machine = EjectorStateMachine::GoBackToHome;
+                    }
+                    else
+                    {
+                        state_machine = EjectorStateMachine::MoveFWD;
+                    }
+                    break;
+                case EjectorStateMachine::GoBackToHome:
+                    if(IsHomming())
+                    {
+                        serial_control = false;
+                        serial_finish = true;
+                        serial_on_moving = false;
+                        Ejector_Status_out(true);
+                        Break_Ejector();
+                    }
+                    else
+                    {
+                        REV_Ejector();
+                    }
+
+                default:
+                    break;
+            }
         }
         else
         {
-            REV_Ejector();
+            serial_on_moving = false;
+            Ejector_Status_out(false);
+            state_machine = EjectorStateMachine::CheckIsHoming;
+            if(IsHomming())
+            {
+                Break_Ejector();
+            }
+            else
+            {
+                REV_Ejector();
+            }
         }
     }
+
     //update();
 }
 void Ejector::set_length(String length)

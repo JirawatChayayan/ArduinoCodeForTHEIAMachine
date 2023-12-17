@@ -280,17 +280,26 @@ void MagKicker::handleProcess()
 
 void MagKicker::control()
 {
-    if(serial_control || readHandle())
+    if(stop_motion)
     {
-      // Serial.println("Handle");
-        handleProcess();
+        stopMotion();
+        serial_control = false;
+        serial_on_moving = false;
+        serial_finish = false;
     }
     else
     {
-        //Serial.println("Un Handle");
-        serial_on_moving = false;
-        unHandleProcess();
+        if(serial_control || readHandle())
+        {
+            handleProcess();
+        }
+        else
+        {
+            serial_on_moving = false;
+            unHandleProcess();
+        }
     }
+   
     //update();
 }
 

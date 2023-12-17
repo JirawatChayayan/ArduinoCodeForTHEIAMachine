@@ -42,7 +42,7 @@ private:
     bool serial_on_moving = false;
 
 public:
-
+    bool stop_motion = false;
     static void sensor_interrupt();
     Ejector(EjectorPin pin);
     void control();

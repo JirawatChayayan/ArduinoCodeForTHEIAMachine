@@ -56,6 +56,7 @@ class MagKicker
         
     public:
         String ns="";
+        bool stop_motion = false;
         MagKicker(MagKickerPin pin_mag);
         void control();
         void set_control(bool status);
