@@ -291,21 +291,22 @@ void MagKicker::control()
         serial_on_moving = false;
         unHandleProcess();
     }
-    update();
+    //update();
 }
 
 void MagKicker::set_control(bool status)
 {
     serial_control = status;
 }
-void MagKicker::update()
+String MagKicker::update()
 {
-    unsigned long T_now = millis();
-    if(T_now - T_update > 100)
-    {
-        T_update = T_now;
-        String msg = "m_"+String(ns)+","+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_platform);
-        Serial.println(msg);
-    }
-
+    String msg = "m_"+String(ns)+","+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_platform);
+    // unsigned long T_now = millis();
+    // if(T_now - T_update > 200)
+    // {
+    //     T_update = T_now;
+       
+    //     Serial.println(msg);
+    // }
+    return msg;
 }

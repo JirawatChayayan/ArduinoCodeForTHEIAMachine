@@ -17,6 +17,15 @@ unsigned long scanStartTime = 0;
 unsigned long totalScanTime = 0;
 unsigned int numScans = 0;
 unsigned long lastUpdateTime = 0;
+float averageScanTime = 0;
+
+unsigned long T_update = millis();
+
+
+String inputStr;
+String cmd_input;
+String cmd_name = "";
+String cmd_value = "";
 
 void setup() 
 {
@@ -42,9 +51,9 @@ void calculate_scantime()
   unsigned long currentTime = millis();
   if (currentTime - lastUpdateTime >= 1000) {
     if (numScans > 0) {
-      unsigned long averageScanTime = totalScanTime / numScans;  // Calculate the average scan time
+      averageScanTime = (totalScanTime / numScans)/1000.0;  // Calculate the average scan time
       
-      Serial.println("Average Scan Time: " + String(averageScanTime) + " microseconds");
+      // Serial.println("Average Scan Time: " + String(averageScanTime) + " microseconds");
     }
     
     totalScanTime = 0;  // Reset the total scan time
@@ -53,10 +62,7 @@ void calculate_scantime()
   }
 }
 
-String inputStr;
-String cmd_input;
-String cmd_name = "";
-String cmd_value = "";
+
 
 void separate_cmd(String cmd,String seprator)
 {
@@ -117,19 +123,28 @@ void serialEvent()
   }
 }
 
+
+void update_status()
+{
+    unsigned long T_now = millis();
+    if(T_now - T_update > 200)
+    {
+      T_update = T_now;
+      String msg = ejector.update()+";"+magkick_L.update()+";"+magkick_R.update()+";"+String(averageScanTime)+"ms";
+      Serial.println(msg);
+    }
+   
+}
+
 void loop()
 {
-  //scanStartTime = micros();  // Record the start time of the loop iteration
-  
+  scanStartTime = micros();  // Record the start time of the loop iteration
   ejector.control();
   magkick_L.control();
   magkick_R.control();
+  update_status();
+  calculate_scantime();
   
-  //calculate_scantime();
-
-  
-
-
   wdt_reset();
 }
 

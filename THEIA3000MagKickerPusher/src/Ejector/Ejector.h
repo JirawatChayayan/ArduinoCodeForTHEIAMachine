@@ -48,7 +48,7 @@ public:
     void control();
     void set_length(String length);
     void set_control(bool control);
-    void update();
+    String update();
 };
 
 #endif  // EJECTOR_H

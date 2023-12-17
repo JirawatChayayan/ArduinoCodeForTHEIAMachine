@@ -53,12 +53,13 @@ class MagKicker
         void processCurrentAlarmCheck(bool stop);
         void unHandleProcess();
         void handleProcess();
-        void update();
+        
     public:
         String ns="";
         MagKicker(MagKickerPin pin_mag);
         void control();
         void set_control(bool status);
+        String update();
 
 };
 

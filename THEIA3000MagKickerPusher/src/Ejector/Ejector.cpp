@@ -186,7 +186,7 @@ void Ejector::control()
             REV_Ejector();
         }
     }
-    update();
+    //update();
 }
 void Ejector::set_length(String length)
 {
@@ -215,13 +215,14 @@ void Ejector::set_control(bool control)
     serial_control = control;
 }
 
-void Ejector::update()
+String Ejector::update()
 {
-    unsigned long T_now = millis();
-    if(T_now - T_update > 100)
-    {
-        T_update = T_now;
-        Serial.println("e_s,"+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_length));
-    }
-
+    String msg = "e_s,"+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_length); 
+    // unsigned long T_now = millis();
+    // if(T_now - T_update > 200)
+    // {
+    //     T_update = T_now;
+    //     Serial.println();
+    // }
+    return msg;
 }
