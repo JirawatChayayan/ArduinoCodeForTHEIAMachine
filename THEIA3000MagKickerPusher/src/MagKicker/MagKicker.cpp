@@ -193,87 +193,108 @@ void MagKicker::handleProcess()
     }
     if(!Alarm)
     {
-        if(readPlatform())
+        // if(readPlatform())
+        // {
+        //     _pin_mag.set_pwm(0);
+        // }
+        // else
+        // {
+
+        // }
+
+        
+        serial_finish = false;
+        serial_on_moving = true;
+        bool platform = readPlatform();
+        bool home_sens = readSensHome();
+        bool limit_sens = readSensLimit();
+        if(platform)
         {
-            _pin_mag.set_pwm(0);
+            state_machine_mag = MagKickState::Finished;
+            serial_alarm = true;
         }
         else
         {
-            serial_finish = false;
-            serial_on_moving = true;
-            bool home_sens = readSensHome();
-            bool limit_sens = readSensLimit();
-            //Serial.println("SENSOR Home :="+ String(home_sens)+" limit :="+String(limit_sens));
-            switch (state_machine_mag)
-            {
-                case MagKickState::CheckIsHoming:
-                    if(!home_sens)
-                    { 
-                        //Serial.println("0 Not Homming");
-                        state_machine_mag = MagKickState::CheckIsHoming;
-                        moveToHome();
-                        _pin_mag.set_pwm(pulseWidth);
+            serial_alarm = false;
+        }
+        //Serial.println("SENSOR Home :="+ String(home_sens)+" limit :="+String(limit_sens));
+        switch (state_machine_mag)
+        {
+            case MagKickState::CheckIsHoming:
+                if(!home_sens)
+                { 
+                    //Serial.println("0 Not Homming");
+                    state_machine_mag = MagKickState::CheckIsHoming;
+                    moveToHome();
+                    _pin_mag.set_pwm(pulseWidth);
 
+                }
+                else
+                {
+                    //Serial.println("0 Homming");
+                    state_machine_mag = MagKickState::MoveToLimit;
+                    _pin_mag.set_pwm(0);
+                    moveToLimit();
+                    _pin_mag.set_pwm(pulseWidth);
+                    last_moving = millis();
+                }
+                break;
+            case MagKickState::MoveToLimit:
+                if(millis() - last_moving > 500)
+                {
+                    if(!limit_sens)
+                    {
+                        //Serial.println("1 Go limit");
+                        state_machine_mag = MagKickState::MoveToLimit;
+                        moveToLimit();
+                        _pin_mag.set_pwm(pulseWidth);
                     }
                     else
                     {
-                        //Serial.println("0 Homming");
-                        state_machine_mag = MagKickState::MoveToLimit;
+                        //Serial.println("1 Islimit");
+                        state_machine_mag = MagKickState::GoBackToHome;
                         _pin_mag.set_pwm(0);
-                        moveToLimit();
+                        
+                        moveToHome();
                         _pin_mag.set_pwm((pulseWidth/3)*2);
                         last_moving = millis();
                     }
-                    break;
-                case MagKickState::MoveToLimit:
-                    if(millis() - last_moving > 500)
+                }
+                break;
+            case MagKickState::GoBackToHome:
+                if(millis() - last_moving > 500)
+                {
+                    if(!home_sens)
                     {
-                        if(!limit_sens)
-                        {
-                            //Serial.println("1 Go limit");
-                            state_machine_mag = MagKickState::MoveToLimit;
-                            moveToLimit();
-                            _pin_mag.set_pwm(pulseWidth);
-                        }
-                        else
-                        {
-                            //Serial.println("1 Islimit");
-                            state_machine_mag = MagKickState::GoBackToHome;
-                            _pin_mag.set_pwm(0);
-                            
-                            moveToHome();
-                            _pin_mag.set_pwm((pulseWidth/3)*2);
-                            last_moving = millis();
-                        }
+                        //Serial.println("2 goback home");
+                        state_machine_mag = MagKickState::GoBackToHome;
+                        moveToHome();
+                        _pin_mag.set_pwm(pulseWidth);
                     }
-                    break;
-                case MagKickState::GoBackToHome:
-                    if(millis() - last_moving > 500)
+                    else
                     {
-                        if(!home_sens)
-                        {
-                            //Serial.println("2 goback home");
-                            state_machine_mag = MagKickState::GoBackToHome;
-                            moveToHome();
-                            _pin_mag.set_pwm(pulseWidth);
-                        }
-                        else
-                        {
-                            //Serial.println("2 is homming");
-                            state_machine_mag = MagKickState::Finished;
-                            _pin_mag.set_pwm(0);
-                            //Serial.println("3 Finished");
-                        }
+                        //Serial.println("2 is homming");
+                        state_machine_mag = MagKickState::Finished;
+                        _pin_mag.set_pwm(0);
+                        //Serial.println("3 Finished");
                     }
-                case MagKickState::Finished:
-                    finishHandleprocess = true;
-                    _pin_mag.set_pwm(pulseWidth);
-                    statusFinishProcess(finishHandleprocess);
+                }
+            case MagKickState::Finished:
+                finishHandleprocess = true;
+                _pin_mag.set_pwm(pulseWidth);
+                statusFinishProcess(finishHandleprocess);
+                if(serial_alarm)
+                {
+                    serial_finish = false;
+                }
+                else
+                {
                     serial_finish = true;
-                    serial_control= false;
-                    serial_on_moving = false;
-                    goHome(readSensHome());
-            }
+                }
+
+                serial_control= false;
+                serial_on_moving = false;
+                goHome(readSensHome());
         }
     }
 }
@@ -311,7 +332,7 @@ void MagKicker::set_control(bool status)
 }
 String MagKicker::update()
 {
-    String msg = "m_"+String(ns)+","+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_platform);
+    String msg = "m_"+String(ns)+","+String(serial_finish)+","+String(serial_on_moving)+","+String(serial_control)+","+String(serial_platform)+","+String(serial_alarm);
     // unsigned long T_now = millis();
     // if(T_now - T_update > 200)
     // {

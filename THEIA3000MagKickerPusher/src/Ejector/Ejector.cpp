@@ -202,7 +202,7 @@ void Ejector::control()
 
     //update();
 }
-void Ejector::set_length(String length)
+uint8_t Ejector::set_length(String length)
 {
     uint8_t len = 3;
     if(length == "4")
@@ -222,7 +222,7 @@ void Ejector::set_length(String length)
         len = 1;
     }
     serial_length = len;
-    
+    return serial_length;
 }
 void Ejector::set_control(bool control)
 {

@@ -14,7 +14,7 @@ class MagKicker
             CheckIsHoming = 0,
             MoveToLimit = 1,
             GoBackToHome = 2,
-            Finished = 3,
+            Finished = 3  
         };
 
 
@@ -34,6 +34,7 @@ class MagKicker
         bool serial_finish = false;
         bool serial_platform = false;
         bool serial_on_moving = false;
+        bool serial_alarm = false;
 
 
         unsigned long T_update = millis();

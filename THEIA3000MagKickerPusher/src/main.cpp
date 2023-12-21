@@ -5,6 +5,7 @@
 #include "GPIO/EjectorPin.h"
 #include "Ejector/Ejector.h"
 #include "MagKicker/MagKicker.h"
+#include <EEPROM.h>
 
 MagKickerPin mag_L_pin(MagSide::Left);
 MagKickerPin mag_R_pin(MagSide::Right);
@@ -28,18 +29,6 @@ String cmd_input;
 String cmd_name = "";
 String cmd_value = "";
 
-void setup() 
-{
-  wdt_enable(WDTO_500MS);
-  Serial.begin(115200);
-  delay(10);
-  Serial.println("***********  THEIA3000 MagKicker Pusher  **********");
-  Serial.println("*  ScanTime      : ~3000us                        *");
-  Serial.println("*  ComPort       : COM14                          *");
-  Serial.println("***************************************************");
-  magkick_L.ns = "l";
-  magkick_R.ns = "r";
-}
 
 void calculate_scantime()
 {
@@ -63,8 +52,6 @@ void calculate_scantime()
   }
 }
 
-
-
 void separate_cmd(String cmd,String seprator)
 {
   cmd_name = "";
@@ -87,7 +74,8 @@ void serialHandle()
   separate_cmd(cmd_input,"=");
   if(cmd_name == "e_l")
   {
-    ejector.set_length(cmd_value);
+    uint8_t len = ejector.set_length(cmd_value);
+    EEPROM.write(0,len);
   }
   else if(cmd_name == "e_c")
   {
@@ -104,6 +92,9 @@ void serialHandle()
   else if(cmd_name == "off")
   {
     power_state = false;
+    magkick_R.set_control(false);
+    magkick_L.set_control(false);
+    ejector.set_control(false);
   }
   else if(cmd_name == "on")
   {
@@ -132,6 +123,18 @@ void serialEvent()
   }
 }
 
+int read_eeprom()
+{
+
+  uint8_t val = EEPROM.read(0);
+  //Serial.println(val);
+  if(val >4 && val <1)
+  {
+     EEPROM.write(0,3);
+     val = EEPROM.read(0);
+  }
+  ejector.set_length(String(val));
+}
 
 void update_status()
 {
@@ -151,6 +154,21 @@ void power_control()
     magkick_R.stop_motion = !power_state;
     ejector.stop_motion = !power_state;
 }
+
+void setup() 
+{
+  read_eeprom();
+  wdt_enable(WDTO_500MS);
+  Serial.begin(115200);
+  delay(10);
+  Serial.println("***********  THEIA3000 MagKicker Pusher  **********");
+  Serial.println("*  ScanTime      : ~3000us                        *");
+  Serial.println("*  ComPort       : COM14                          *");
+  Serial.println("***************************************************");
+  magkick_L.ns = "l";
+  magkick_R.ns = "r";
+}
+
 
 void loop()
 {

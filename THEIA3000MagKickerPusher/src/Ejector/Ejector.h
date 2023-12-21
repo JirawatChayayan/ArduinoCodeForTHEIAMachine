@@ -46,7 +46,7 @@ public:
     static void sensor_interrupt();
     Ejector(EjectorPin pin);
     void control();
-    void set_length(String length);
+    uint8_t set_length(String length);
     void set_control(bool control);
     String update();
 };
