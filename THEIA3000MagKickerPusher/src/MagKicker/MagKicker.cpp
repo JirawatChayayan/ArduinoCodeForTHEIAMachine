@@ -252,13 +252,19 @@ void MagKicker::handleProcess()
                     else
                     {
                         //Serial.println("1 Islimit");
-                        state_machine_mag = MagKickState::GoBackToHome;
+                        state_machine_mag = MagKickState::WatiState;
                         _pin_mag.set_pwm(0);
-                        
-                        moveToHome();
-                        _pin_mag.set_pwm((pulseWidth/3)*2);
                         last_moving = millis();
                     }
+                }
+                break;
+            case MagKickState::WatiState:
+                if(millis() - last_moving > 1500)
+                {
+                    state_machine_mag = MagKickState::GoBackToHome;
+                    moveToHome();
+                    _pin_mag.set_pwm((pulseWidth/3)*2);
+                    last_moving = millis();
                 }
                 break;
             case MagKickState::GoBackToHome:
@@ -277,24 +283,37 @@ void MagKicker::handleProcess()
                         state_machine_mag = MagKickState::Finished;
                         _pin_mag.set_pwm(0);
                         //Serial.println("3 Finished");
+                        last_moving = millis();
                     }
                 }
+                break;
             case MagKickState::Finished:
-                finishHandleprocess = true;
-                _pin_mag.set_pwm(pulseWidth);
-                statusFinishProcess(finishHandleprocess);
-                if(serial_alarm)
+                if(millis() - last_moving > 500 && home_sens)
                 {
-                    serial_finish = false;
+                    finishHandleprocess = true;
+                    _pin_mag.set_pwm(pulseWidth);
+                    statusFinishProcess(finishHandleprocess);
+                    if(serial_alarm)
+                    {
+                        serial_finish = false;
+                    }
+                    else
+                    {
+                        serial_finish = true;
+                    }
+
+                    serial_control= false;
+                    serial_on_moving = false;
+                    goHome(readSensHome());
                 }
                 else
                 {
-                    serial_finish = true;
+                    if(!home_sens)
+                    {
+                        last_moving = millis();
+                    }
                 }
-
-                serial_control= false;
-                serial_on_moving = false;
-                goHome(readSensHome());
+                break;
         }
     }
 }

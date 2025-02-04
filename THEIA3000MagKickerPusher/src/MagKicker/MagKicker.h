@@ -13,8 +13,9 @@ class MagKicker
         enum MagKickState {
             CheckIsHoming = 0,
             MoveToLimit = 1,
-            GoBackToHome = 2,
-            Finished = 3  
+            WatiState = 2,
+            GoBackToHome = 3,
+            Finished = 4,
         };
 
 
