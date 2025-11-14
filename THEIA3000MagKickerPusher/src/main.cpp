@@ -5,14 +5,19 @@
 #include "GPIO/EjectorPin.h"
 #include "Ejector/Ejector.h"
 #include "MagKicker/MagKicker.h"
+#include "Gripper/Gripper.h"
 #include <EEPROM.h>
 
 MagKickerPin mag_L_pin(MagSide::Left);
 MagKickerPin mag_R_pin(MagSide::Right);
 EjectorPin ejector_pin(true);
+GripperPin gripperPin(true);
+
+
 Ejector ejector(ejector_pin);
 MagKicker magkick_L(mag_L_pin);
 MagKicker magkick_R(mag_R_pin);
+Gripper gripperControl(gripperPin);
 
 unsigned long scanStartTime = 0;
 unsigned long totalScanTime = 0;
@@ -89,16 +94,30 @@ void serialHandle()
   {
     magkick_R.set_control(cmd_value == "1");
   }
+  else if(cmd_name == "g_on")
+  {
+    gripperControl.gripperAction(cmd_value.toInt(),true);
+  }
+  else if(cmd_name == "g_off")
+  {
+    gripperControl.gripperAction(cmd_value.toInt(),false);
+  }
+  else if(cmd_name == "g_bit")
+  {
+    gripperControl.gripperBitAction(cmd_value);
+  }
   else if(cmd_name == "off")
   {
     power_state = false;
     magkick_R.set_control(false);
     magkick_L.set_control(false);
     ejector.set_control(false);
+    gripperControl.set_control(false);
   }
   else if(cmd_name == "on")
   {
     power_state = true;
+
   }
 }
 
@@ -142,7 +161,7 @@ void update_status()
     if(T_now - T_update > 20)
     {
       T_update = T_now;
-      String msg = "pw,"+String(power_state)+";"+ejector.update()+";"+magkick_L.update()+";"+magkick_R.update()+";"+String(averageScanTime)+"ms";
+      String msg = "pw,"+String(power_state)+";"+ejector.update()+";"+magkick_L.update()+";"+magkick_R.update()+";"+String(averageScanTime)+"ms;"+gripperControl.update();
       Serial.println(msg);
     }
    
@@ -177,6 +196,7 @@ void loop()
   ejector.control();
   magkick_L.control();
   magkick_R.control();
+  gripperControl.control();
   update_status();
   calculate_scantime();
   
